@@ -43,7 +43,7 @@ def histogramme():
     return render_template("histogramme.html")
 
 #Exercice5
- Fonction pour extraire la minute à partir de la date
+ #Fonction pour extraire la minute à partir de la date
 def extract_minutes(date_string):
     date_object = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
     return date_object.minute
