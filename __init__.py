@@ -42,6 +42,41 @@ def mongraphique():
 def histogramme():
     return render_template("histogramme.html")
 
+#Exercice5
+ Fonction pour extraire la minute à partir de la date
+def extract_minutes(date_string):
+    date_object = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
+    return date_object.minute
+
+# Route pour récupérer et traiter les commits
+@app.route('/commits/')
+def commits():
+    # Récupérer les commits depuis l'API GitHub
+    url = 'https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits'
+    response = requests.get(url)
+    commits_data = response.json()
+
+    # Extraire les minutes de chaque commit
+    minutes = [extract_minutes(commit['commit']['author']['date']) for commit in commits_data]
+
+    # Compter le nombre de commits par minute
+    commit_counts = Counter(minutes)
+
+    # Créer un graphique
+    plt.bar(commit_counts.keys(), commit_counts.values())
+    plt.xlabel('Minute')
+    plt.ylabel('Nombre de commits')
+    plt.title('Nombre de commits par minute')
+
+    # Convertir le graphique en image pour l'affichage sur la page web
+    img = io.BytesIO()
+    plt.savefig(img, format='png')
+    img.seek(0)
+    img_base64 = base64.b64encode(img.getvalue()).decode('utf-8')
+
+    # Retourner le graphique sous forme d'image Base64 à afficher dans le HTML
+    return render_template('commits.html', img_base64=img_base64)
+
 
 
 
