@@ -43,40 +43,42 @@ def histogramme():
     return render_template("histogramme.html")
 
 #Exercice5
-# URL de l'API pour récupérer les commits
+
+# URL de l'API GitHub pour récupérer les commits
 GITHUB_COMMITS_API = "https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits"
 
-# Route pour extraire les minutes de la date du commit
 @app.route('/extract-minutes/<date_string>')
 def extract_minutes(date_string):
-    date_object = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
-    minutes = date_object.minute
-    return jsonify({'minutes': minutes})
+    """
+    Cette route prend une chaîne de date au format "YYYY-MM-DDTHH:MM:SSZ" et en extrait les minutes.
+    """
+    try:
+        date_object = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
+        minutes = date_object.minute
+        return jsonify({'minutes': minutes})
+    except ValueError:
+        return jsonify({'error': 'Invalid date format. Use "YYYY-MM-DDTHH:MM:SSZ".'}), 400
 
-# Route pour récupérer les commits et créer le graphique
-@app.route('/commits/')
-def commits():
-    # Récupérer les commits de l'API GitHub
-    response = requests.get(GITHUB_COMMITS_API)
-    commits_data = response.json()
+@app.route('/extract-commit-author/<commit_sha>', methods=['GET'])
+def extract_commit_author(commit_sha):
+    """
+    Cette route prend un commit SHA et retourne le message du commit et le nom de l'auteur.
+    """
+    response = requests.get(f"{GITHUB_COMMITS_API}/{commit_sha}")
+    
+    if response.status_code == 200:
+        commit_data = response.json()
+        commit_message = commit_data['commit']['message']
+        author_name = commit_data['commit']['author']['name']
+        return jsonify({
+            'commit_message': commit_message,
+            'author_name': author_name
+        })
+    else:
+        return jsonify({'error': 'Commit not found or invalid SHA'}), 404
 
-    # Extraire les minutes des dates de commit
-    minutes_list = []
-    for commit in commits_data:
-        commit_date = commit['commit']['author']['date']
-        minutes = extract_minutes_from_date(commit_date)
-        minutes_list.append(minutes)
 
-    # Compter les commits par minute
-    commit_counts = Counter(minutes_list)
 
-    # Créer un graphique à partir des données
-    fig, ax = plt.subplots()
-    ax.bar(commit_counts.keys(), commit_counts.values())
-    ax.set_xlabel('Minute')
-    ax.set_ylabel('Nombre de commits')
-    ax.set_title('Nombre de commits par minute')
-  
 
 if __name__ == "__main__":
   app.run(debug=True)
