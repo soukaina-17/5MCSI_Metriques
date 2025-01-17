@@ -1,12 +1,25 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Commits par minute</title>
+    <title>GitHub Commits</title>
 </head>
 <body>
-    <h1>Graphique des commits par minute</h1>
-   
+    <h1>Liste des Commits</h1>
+    <ul id="commits"></ul>
+
+    <script>
+        fetch('/get-commits')
+            .then(response => response.json())
+            .then(data => {
+                const commitsList = document.getElementById('commits');
+                data.forEach(commit => {
+                    const listItem = document.createElement('li');
+                    listItem.innerText = `Commit SHA: ${commit.commit}, Author: ${commit.author}, Date: ${commit.date}`;
+                    commitsList.appendChild(listItem);
+                });
+            });
+    </script>
 </body>
 </html>
