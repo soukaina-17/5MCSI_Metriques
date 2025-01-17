@@ -43,32 +43,40 @@ def histogramme():
     return render_template("histogramme.html")
 
 #Exercice5
+# URL de l'API pour récupérer les commits
+GITHUB_COMMITS_API = "https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits"
+
+# Route pour extraire les minutes de la date du commit
 @app.route('/extract-minutes/<date_string>')
 def extract_minutes(date_string):
-    # Convertir la date au format souhaité
     date_object = datetime.strptime(date_string, '%Y-%m-%dT%H:%M:%SZ')
     minutes = date_object.minute
     return jsonify({'minutes': minutes})
 
-@app.route('/get-commits')
-def get_commits():
-    url = "https://api.github.com/repos/OpenRSI/5MCSI_Metriques/commits"
-    response = requests.get(url)
-    commits = response.json()  # Convertir la réponse JSON en objet Python
+# Route pour récupérer les commits et créer le graphique
+@app.route('/commits/')
+def commits():
+    # Récupérer les commits de l'API GitHub
+    response = requests.get(GITHUB_COMMITS_API)
+    commits_data = response.json()
 
-    # Extraire les informations de chaque commit
-    commit_data = []
-    for commit in commits:
-        commit_info = {
-            "commit": commit['sha'],
-            "author": commit['commit']['author']['name'],
-            "date": commit['commit']['author']['date']
-        }
-        commit_data.append(commit_info)
+    # Extraire les minutes des dates de commit
+    minutes_list = []
+    for commit in commits_data:
+        commit_date = commit['commit']['author']['date']
+        minutes = extract_minutes_from_date(commit_date)
+        minutes_list.append(minutes)
 
-    return jsonify(commit_data)
+    # Compter les commits par minute
+    commit_counts = Counter(minutes_list)
 
-
+    # Créer un graphique à partir des données
+    fig, ax = plt.subplots()
+    ax.bar(commit_counts.keys(), commit_counts.values())
+    ax.set_xlabel('Minute')
+    ax.set_ylabel('Nombre de commits')
+    ax.set_title('Nombre de commits par minute')
+  
 
 if __name__ == "__main__":
   app.run(debug=True)
