@@ -35,6 +35,16 @@ def meteo():
 @app.route("/rapport/")
 def mongraphique():
     return render_template("graphique.html")
+  
+
+#Exercice 4 : Créer son histogramme
+@app.route("/histogramme/")
+def histogramme():
+    return render_template("histogramme.html")
+
+
+
+
 
 
 if __name__ == "__main__":
